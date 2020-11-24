@@ -1,37 +1,44 @@
 <template>
     <li>
-        <div @click="toggle"
-             @dblclick="makeFolder">
-            {{ item.name }}
-            <span v-if="isFolder">[{{ isOpen ? '-' : '+' }}]</span>
+        <div @click="toggle" @dblclick="makeFolder">
+            {{ childData.name }}
+            <span v-if="isFolder">[{{ isOpen ? "-" : "+" }}]</span>
         </div>
         <ul v-if="isFolder" v-show="isOpen">
             <tree-item
-                    v-for="(child, index) in item.children"
+                    v-for="(child, index) in childData.children"
                     :key="index"
-                    :item="child"
+                    :depth="depth+1"
+                    :parentData="child"
                     class="item"
-                    @make-folder="$emit('make-folder', $event)"
-                    @add-item="$emit('add-item', $event)"/>
-            <li @click="$emit('add-item', item)">+</li>
+                    @save-data="saveData"
+            />
+            <li @click="addItem">+</li>
         </ul>
     </li>
 </template>
 
 <script>
+
 export default {
     name: "TreeItem",
     props: {
-        item: Object
+        parentData: Object,
+        depth: Number
+    },
+    created() {
+        this.childData = JSON.parse(JSON.stringify(this.parentData))
     },
     data: function () {
         return {
-            isOpen: false
+            isOpen: false,
+            childData: undefined,
+            count: 1
         };
     },
     computed: {
         isFolder: function () {
-            return this.item.children && this.item.children.length;
+            return this.childData.children && this.childData.children.length;
         }
     },
     methods: {
@@ -42,14 +49,36 @@ export default {
         },
         makeFolder: function () {
             if (!this.isFolder) {
-                this.$emit("make-folder", this.item);
+                this.addItem();
                 this.isOpen = true;
             }
+        },
+        addItem: function () {
+            let id = this.parentData.id.toString() + this.increaseCount();
+            this.childData.children.push({id: id, name: "File", children: []});
+            this.childData = JSON.parse(JSON.stringify(this.childData));
+            this.$emit("save-data", this.childData);
+        },
+        saveData: function (item) {
+            let shouldAdd = true;
+            this.childData.children.forEach((obj, index) => {
+                if (obj.id === item.id) {
+                    this.childData.children[index] = item;
+                    shouldAdd = false;
+                }
+            });
+            if (shouldAdd) {
+                this.childData.children.push(item);
+            }
+            this.$emit("save-data", this.childData);
+            console.log("childData ==>" + this.childData.toString());
+        },
+        increaseCount: function () {
+            return this.count++;
         }
-    }
-}
+    },
+};
 </script>
 
 <style scoped>
-
 </style>

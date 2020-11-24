@@ -1,60 +1,52 @@
 <template>
     <div id="app">
         <ul>
-            <tree-item
-                    :item="treeData"
-                    class="item"
-                    @make-folder="makeFolder"
-                    @add-item="addItem">
+            <tree-item :parentData="parentData" :key="-1" :depth="0" class="item" @save-data="saveData">
             </tree-item>
         </ul>
     </div>
 </template>
 
 <script>
-import TreeItem from './components/TreeItem.vue'
-import Vue from 'vue'
+import TreeItem from "./components/TreeItem.vue";
 
 var treeData = {
+    id:1,
     name: "Directory",
-    children: []
+    children: [],
 };
 
 const storageKey = "directoryKey";
 
 export default {
-    name: 'App',
+    name: "App",
     components: {
-        TreeItem: TreeItem
+        TreeItem: TreeItem,
     },
-    mounted() {
+    created() {
         let storedObj = localStorage.getItem(storageKey);
-        if (typeof storedObj !== 'undefined' || storedObj !== null) {
-            treeData = JSON.parse(storedObj);
+        if (storedObj !== null) {
+            this.parentData = JSON.parse(storedObj);
+            console.log(this.parentData);
+        }else{
+            this.parentData = treeData;
         }
-        console.log(treeData)
     },
     data: function () {
         return {
-            treeData: treeData
-        }
+            parentData: undefined,
+        };
     },
     methods: {
-        makeFolder: function (item) {
-            Vue.set(item, "children", []);
-            this.addItem(item);
-        },
-        addItem: function (item) {
-            item.children.push({
-                name: "File"
-            });
-            localStorage.setItem(storageKey, JSON.stringify(item));
+        saveData: function (item) {
             console.log(item)
+            this.parentData=JSON.parse(JSON.stringify(item));
+            localStorage.setItem(storageKey, JSON.stringify(this.parentData));
+            console.log(this.$data.parentData);
         }
-    }
-}
+    },
+};
 </script>
 
 <style>
-
 </style>
